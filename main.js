@@ -1,14 +1,44 @@
 const app = document.getElementById('app');
 
-let words = [];
-let letters = [];
+// Keyboard
+const wordleRows = document.querySelectorAll('.wordle-wrapper .row');
+const keyboardKeys = document.querySelectorAll('.keyboard_wrapper .key .row span');
+const enterKey = document.querySelector('.keyboard_wrapper .key .row .enter-key');
+const delKey = document.querySelector('.keyboard_wrapper .key .row .del-key');
 
-const wordOfTheDay = 'rapid';
+// Modal
+const modal = document.querySelector('.modal');
+const modalContent = modal.querySelector('.modal__content');
+const closeModal = modal.querySelector('.modal__close');
+const modalHeading = modalContent.querySelector('h1');
+const modalText = modalContent.querySelector('p');
+
+// Tool Tip
+const toolTip = document.querySelector('.tooltip');
+const toolTipClose = document.querySelector('.tooltip .tooltip__close');
+
+let wordList = ['about', 'place', 'globe', 'great', 'rapid', 'found', 'under', 'light', 'story', 'point', 'white', 'alone', 'plane', 'woman', 'watch', 'break'];
+
+const wordGenerator = () => {
+    return Math.floor(Math.random() * wordList.length);
+}
+
+let letters = [];
+let words = [];
+let wordOfTheDay = wordList[wordGenerator()];
 const result = {
     guesses: 0,
     outcome: '',
 }
 
+const SuccessMessage = {
+    1: 'Absolute Genious!!',
+    2: 'Mind blowing!!',
+    3: 'Excellant!!',
+    4: 'Great job!!',
+    5: 'Good job!!',
+    6: 'Phew!!'
+}
 const generateWordleBlocks = (rowId, wordLength) => {
     const row = document.createElement("section");
     row.classList.add(`row-${rowId}`);
@@ -38,34 +68,32 @@ const renderWordlePanel = (wordLength, guesses) => {
     app.insertBefore(container, keyBoard);
 }
 
-const wordleRows = document.querySelectorAll('.wordle-wrapper .row');
-const keyboardKeys = document.querySelectorAll('.keyboard_wrapper .key .row span');
-const enterKey = document.querySelector('.keyboard_wrapper .key .row .enter-key');
-const delKey = document.querySelector('.keyboard_wrapper .key .row .del-key');
-const closeModal = document.querySelector('.modal__close');
-const modal = document.querySelector('.modal');
-const modalContent = document.querySelector('.modal__content');
-
-
-const showSuccessModal = () => {
+const setVisibleModal = () => {
     modal.style.visibility = 'visible';
     modal.style.opacity = 1;
-    modalContent.querySelector('h1').textContent = 'Great Job!'
-    modalContent.querySelector('p').textContent = 'You have cracked the game!'
 }
 
-const showFailureModal = () => {
-    const modal = document.querySelector('.modal');
-    modal.style.visibility = 'visible';
-    modal.style.opacity = 1;
-    modalContent.querySelector('h1').textContent = 'OOPS!'
-    modalContent.querySelector('p').textContent = 'Better luck next time!'
+const setModalData = (heading, textContent) => {
+    modalHeading.textContent = heading;
+    modalText.textContent = textContent;
 }
+
+const renderSuccessModal = () => {
+    setVisibleModal();
+    setModalData(SuccessMessage[result.guesses], 'You have succesfully completed this game!');
+}
+
+const renderFailureModal = () => {
+    setVisibleModal();
+    setModalData('OOPS!', 'Better luck next time!');
+}
+
 
 const resetGame = () => {
     words = [];
     letters = [];
     renderWordlePanel(5, 6);
+    wordOfTheDay = wordList[wordGenerator()];
 
 }
 
@@ -99,10 +127,10 @@ const onEnter = () => {
     letters = [];
     if (result.guesses === 6) {
         result.outcome = 'failed';
-        showFailureModal();
+        renderFailureModal();
     } else if (correctLetters === 5) {
-        result.outcome = 'success'
-        showSuccessModal();
+        result.outcome = 'success';
+        renderSuccessModal();
     }
 };
 const onDelete = () => {
@@ -114,8 +142,12 @@ const onDelete = () => {
 keyboardKeys.forEach((key) => {
     if (!result.outcome) {
         key.addEventListener('click', (e) => {
+            toolTip.style.visibility = 'hidden';
             if (e.target.classList.contains('enter-key')) {
-                onEnter();
+                if (letters.length === 5)
+                    onEnter();
+                else
+                    toolTip.style.visibility = 'visible';
             } else if (e.target.classList.contains('del-key')) {
                 onDelete();
             } else {
@@ -125,10 +157,14 @@ keyboardKeys.forEach((key) => {
     }
 });
 
-closeModal.addEventListener('click', (e) => {
+closeModal.addEventListener('click', () => {
     resetGame();
     modal.style.visibility = 'hidden';
     modal.style.opacity = 0;
-})
+});
+
+toolTipClose.addEventListener('click', () => {
+    toolTip.style.visibility = 'hidden';
+});
 
 renderWordlePanel(5, 6);
